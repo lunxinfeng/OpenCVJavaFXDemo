@@ -24,6 +24,7 @@ public class HomeController {
 
     public HomeController() {
         String[] images = new String[]{
+                "/10.jpg",
                 "/tx.png",
                 "/tx2.png",
                 "/chess1.jpg",
