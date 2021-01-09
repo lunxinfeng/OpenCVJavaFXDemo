@@ -180,26 +180,110 @@ public class HomeController {
         double height = src.rows();
 
         Point[] array1 = new Point[4];
-        array1[0] = new Point(42, 127);//
-        array1[1] = new Point(42 + 395, 127);
-        array1[2] = new Point(42, 127 + 395);
-        array1[3] = new Point(42 + 395, 127 + 395);
+//        array1[0] = new Point(42, 127);//
+//        array1[1] = new Point(42 + 395, 127);
+//        array1[2] = new Point(42, 127 + 395);
+//        array1[3] = new Point(42 + 395, 127 + 395);
+
+        array1[0] = new Point(163.38181818181818, 85.66060606060606);//
+        array1[1] = new Point(582.2666666666667, 85.66060606060606);
+        array1[2] = new Point(88.03636363636363, 490.1939393939394);
+        array1[3] = new Point(657.6121212121212, 490.1939393939394);
 
         Point[] array2 = new Point[4];
-        array2[0] = new Point(42 + 50, 127);
-        array2[1] = new Point(42 + 395 - 50, 127);
-        array2[2] = new Point(42, 127 + 395);
-        array2[3] = new Point(42 + 395, 127 + 395);
+//        array2[0] = new Point(42 + 50, 127);
+//        array2[1] = new Point(42 + 395 - 50, 127);
+//        array2[2] = new Point(42, 127 + 395);
+//        array2[3] = new Point(42 + 395, 127 + 395);
+
+        array2[0] = new Point(163.38181818181818, 85.66060606060606);//418.8848 71.309097
+        array2[1] = new Point(582.2666666666667, 85.66060606060606);
+        array2[2] = new Point(163.38181818181818, 504.545406);
+        array2[3] = new Point(582.2666666666667, 504.545406);
+//
+//        array2[0] = new Point(0, 0);
+//        array2[1] = new Point(416, 0);
+//        array2[2] = new Point(0, 416);
+//        array2[3] = new Point(416, 416);
 
         Mat srcPoint = new MatOfPoint2f(array1);
         Mat dstPoint = new MatOfPoint2f(array2);
 
         //直线仍然保持直线
         Mat perspectiveTransform = Imgproc.getPerspectiveTransform(srcPoint, dstPoint);
+        System.out.println(perspectiveTransform);
+        System.out.println(perspectiveTransform.rows());
+        System.out.println(perspectiveTransform.cols());
+        System.out.println(perspectiveTransform.row(0).col(0));
+        System.out.println(perspectiveTransform.row(0).col(1));
+        System.out.println(perspectiveTransform.row(0).col(2));
+        System.out.println(perspectiveTransform.row(0).col(0).dump());
+        System.out.println(Arrays.toString(perspectiveTransform.get(0, 0)));
+        System.out.println(Arrays.toString(perspectiveTransform.get(0, 1)));
+        System.out.println(Arrays.toString(perspectiveTransform.get(0, 2)));
+        System.out.println(Arrays.toString(perspectiveTransform.get(1, 0)));
+        System.out.println(Arrays.toString(perspectiveTransform.get(1, 1)));
+        System.out.println(Arrays.toString(perspectiveTransform.get(1, 2)));
+        double[] array = new double[9];
+        int i = perspectiveTransform.get(0, 0, array);
+        System.out.println(i);
+        System.out.println(Arrays.toString(array));
         Mat dst = new Mat();
         Imgproc.warpPerspective(src, dst, perspectiveTransform, new Size(width, height));
+        System.out.println(dst);
+
+//        Core.gemm
 
         showDst(dst);
+    }
+
+    protected void getBoardGrid() {
+        int boardSize = 19;
+        int num = 100;
+
+        Point[] array1 = new Point[4];
+        array1[0] = new Point(163.38181818181818, 85.66060606060606);//
+        array1[1] = new Point(582.2666666666667, 85.66060606060606);
+        array1[2] = new Point(88.03636363636363, 490.1939393939394);
+        array1[3] = new Point(657.6121212121212, 490.1939393939394);
+
+        Point[] array2 = new Point[4];
+        array2[0] = new Point(0, 0);
+        array2[1] = new Point((boardSize - 1) * num, 0);
+        array2[2] = new Point(0, (boardSize - 1) * num);
+        array2[3] = new Point((boardSize - 1) * num, (boardSize - 1) * num);
+
+        Mat srcPoint = new MatOfPoint2f(array1);
+        Mat dstPoint = new MatOfPoint2f(array2);
+        Mat perspectiveTransform = Imgproc.getPerspectiveTransform(srcPoint, dstPoint);
+
+        double[] array = new double[9];
+        perspectiveTransform.get(0, 0, array);
+        double[][] h = new double[3][3];
+        h[0][0] = array[0];
+        h[0][1] = array[1];
+        h[0][2] = array[2];
+        h[1][0] = array[3];
+        h[1][1] = array[4];
+        h[1][2] = array[5];
+        h[2][0] = array[6];
+        h[2][1] = array[7];
+        h[2][2] = array[8];
+
+
+        for (int x = 0; x < boardSize; x++) {
+            for (int y = 0; y < boardSize; y++) {
+                double u = x * num;
+                double v = y * num;
+
+                double resultX = (h[0][0] * u + h[0][1] * v + h[0][2]) / (h[2][0] * u + h[2][1] * v + h[2][2]);
+                double resultY = (h[1][0] * u + h[1][1] * v + h[1][2]) / (h[2][0] * u + h[2][1] * v + h[2][2]);
+
+//                double resultX = ((h[2][0] - u * h[2][2]) * (v * h[1][2] - h[1][1]) - (h[2][1] - v * h[2][2]) * (u * h[1][2] - h[1][0]))/((u * h[0][2] - h[0][0]) * (v * h[1][2] - h[1][1]) - (v * h[0][2] - h[0][1])*(u * h[1][2] - h[1][0]));
+
+                System.out.println(resultX + "," + resultY);
+            }
+        }
     }
 
     protected void adaptiveThreshold() {

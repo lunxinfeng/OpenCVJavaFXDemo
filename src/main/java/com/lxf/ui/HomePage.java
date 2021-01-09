@@ -25,6 +25,7 @@ public class HomePage extends Pane {
     private final Button btnTransformBy4Point = new Button("4点变换（透视变换）");
     private final Button btnThresholdAuto = new Button("自适应阈值化");
     private final Button btnLines = new Button("霍夫直线");
+    private final Button btnYoloData = new Button("YoloData");
     private final ImageView imageSrc = new ImageView();
     private final ImageView imageDst = new ImageView();
 
@@ -47,6 +48,7 @@ public class HomePage extends Pane {
                 btnTransformBy4Point,
                 btnThresholdAuto,
                 btnLines,
+                btnYoloData,
                 imageSrc,
                 imageDst
         );
@@ -81,12 +83,24 @@ public class HomePage extends Pane {
 
     private void event() {
         btnLoadImage.setOnAction(event -> controller.loadImage());
-        imageSrc.setOnMouseClicked(event -> controller.nextImage());
+        imageSrc.setOnMouseClicked(event -> {
+            if (event.isAltDown()) {
+                double imageWidth = imageSrc.getImage().getWidth();
+                double imageHeight = imageSrc.getImage().getHeight();
+
+                double imageViewWidth = imageSrc.getFitWidth();
+                double imageViewHeight = imageSrc.getFitHeight();
+
+                System.out.println((event.getSceneX() - imageSrc.getLayoutX()) * imageWidth / imageViewWidth);
+                System.out.println((event.getSceneY() - imageSrc.getLayoutY()) * imageHeight / imageViewHeight);
+            } else
+                controller.nextImage();
+        });
         btnGray.setOnAction(event -> controller.gray());
         btnThresholdGlobal.setOnAction(event -> controller.threshold(sliderThreshold.getValue()));
         sliderThreshold.valueProperty().addListener((observable, oldValue, newValue) -> btnThresholdGlobal.fire());
         btnContourAfterThreshold.setOnAction(event -> controller.contourAfterThreshold());
-        btnCanny.setOnAction(event -> controller.canny(sliderCannyThreshold1.getValue(),sliderCannyThreshold2.getValue()));
+        btnCanny.setOnAction(event -> controller.canny(sliderCannyThreshold1.getValue(), sliderCannyThreshold2.getValue()));
         sliderCannyThreshold1.valueProperty().addListener((observable, oldValue, newValue) -> btnCanny.fire());
         sliderCannyThreshold2.valueProperty().addListener((observable, oldValue, newValue) -> btnCanny.fire());
         btnContourAfterCanny.setOnAction(event -> controller.contourAfterCanny());
@@ -95,6 +109,7 @@ public class HomePage extends Pane {
         btnTransformBy4Point.setOnAction(event -> controller.transformBy4Point());
         btnThresholdAuto.setOnAction(event -> controller.adaptiveThreshold());
         btnLines.setOnAction(event -> controller.lines());
+        btnYoloData.setOnAction(event -> controller.getBoardGrid());
     }
 
     private void ui() {
@@ -110,6 +125,7 @@ public class HomePage extends Pane {
         btnTransformBy4Point.disableProperty().bind(controller.imageSrcProperty.isNull());
         btnThresholdAuto.disableProperty().bind(controller.imageSrcProperty.isNull());
         btnLines.disableProperty().bind(controller.cannyMatProperty.isNull());
+        btnYoloData.disableProperty().bind(controller.imageSrcProperty.isNull());
 
         btnGray.layoutYProperty().bind(btnLoadImage.layoutYProperty().add(btnLoadImage.heightProperty()).add(10));
 
@@ -135,6 +151,7 @@ public class HomePage extends Pane {
         btnTransformBy4Point.layoutYProperty().bind(btnTransformBy3Point.layoutYProperty().add(btnCanny.heightProperty()).add(10));
         btnThresholdAuto.layoutYProperty().bind(btnTransformBy4Point.layoutYProperty().add(btnCanny.heightProperty()).add(10));
         btnLines.layoutYProperty().bind(btnThresholdAuto.layoutYProperty().add(btnCanny.heightProperty()).add(10));
+        btnYoloData.layoutYProperty().bind(btnLines.layoutYProperty().add(btnCanny.heightProperty()).add(10));
 
         imageSrc.fitHeightProperty().bind(this.heightProperty().multiply(0.8));
 //        imageSrc.fitWidthProperty().bind(imageSrc.fitHeightProperty().multiply(480).divide(800));//比例800*480
